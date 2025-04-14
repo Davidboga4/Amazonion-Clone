@@ -3,69 +3,53 @@ import React, { useState, useEffect, useRef } from "react";
 import "./home.css";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
+interface ImageSource {
+    desktop: string;
+    mobile: string;
+}
+
 interface CarouselProps {
-    images: string[];
+    images: ImageSource[];
     interval: number; // in milliseconds
 }
 
 const CarouselSlider: React.FC<CarouselProps> = ({ images, interval }) => {
-    // const [currentIndex, setCurrentIndex] = useState(0);
-    // const carouselRef = useRef<HTMLDivElement>(null);
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-
     const [currentIndex, setCurrentIndex] = useState(0);
     const carouselRef = useRef<HTMLDivElement>(null);
     const [transitioning, setTransitioning] = useState(false);
 
     useEffect(() => {
-        timeoutRef.current = setInterval(() => {
-            setTransitioning(true);
-            setTimeout(() => {
-                setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
-                setTransitioning(false);
-            }, 500); // Match transition duration
-        }, interval);
-
+        startSlider();
         return () => stopSlider();
     }, [images, interval]);
 
     useEffect(() => {
-        // if (carouselRef.current) {
-        //   if (transitioning) {
-        //     carouselRef.current.style.transition = 'transform 0.5s ease-in-out';
-        //   } else {
-        //     carouselRef.current.style.transition = 'none';
-        //   }
-        //   carouselRef.current.style.transform = `translateX(-${currentIndex * 100}%)`;
-        //   }
         if (carouselRef.current) {
-            carouselRef.current.style.transition = currentIndex == 0 ? 'none' : 'transform 1.5s ease-in-out';
-            carouselRef.current.style.transform = `translateX(-${currentIndex * 100}%)`;
+            carouselRef.current.style.transition = currentIndex === 0 ? 'none' : 'transform 1.5s ease-in-out';
+            carouselRef.current.style.transform = currentIndex === 0 ? `translateX(0%)` : `translateX(-${currentIndex * 100}%)`;
         }
     }, [currentIndex, transitioning]);
 
-    // useEffect(() => {
-    //     startSlider();
-    //     return () => stopSlider();
-    // }, [images, interval]);
-
-    // const startSlider = () => {
-    //     console.log('***', 'START');
-    //     timeoutRef.current = setTimeout(() => goToNext(), interval);
-    // };
+    const startSlider = () => {
+        stopSlider(); // clear any existing interval
+        timeoutRef.current = setInterval(() => {
+            setTransitioning(true);
+            setTimeout(() => {
+                setCurrentIndex((prevIndex) => {
+                    const nextIndex = (prevIndex + 1) % images.length;
+                    return nextIndex;
+                });
+                setTransitioning(false);
+            }, 1500);
+        }, interval);
+    };
 
     const stopSlider = () => {
         if (timeoutRef.current) {
             clearTimeout(timeoutRef.current);
         }
     };
-
-    // useEffect(() => {
-    //     if (carouselRef.current) {
-    //         carouselRef.current.style.transition = currentIndex == 0 ? 'none' : 'transform 0.5s ease-in-out';
-    //         carouselRef.current.style.transform = `translateX(-${currentIndex * 100}%)`;
-    //     }
-    // }, [currentIndex]);
 
     const goToPrevious = () => {
         stopSlider();
@@ -78,6 +62,32 @@ const CarouselSlider: React.FC<CarouselProps> = ({ images, interval }) => {
         stopSlider();
         setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
     };
+    const [startX, setStartX] = useState<number | null>(null);
+    const [startY, setStartY] = useState<number | null>(null);
+
+    const handleTouchStart = (e: React.TouchEvent) => {
+        setStartX(e.touches[0].clientX);
+        setStartY(e.touches[0].clientY);
+    };
+
+    const handleTouchEnd = (e: React.TouchEvent) => {
+        if (startX === null || startY === null) return;
+
+        const endX = e.changedTouches[0].clientX;
+        const endY = e.changedTouches[0].clientY;
+
+        const deltaX = endX - startX;
+        const deltaY = endY - startY;
+
+        // Make sure it's a horizontal swipe (not vertical)
+        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+            deltaX > 0 ? goToPrevious() : goToNext();
+        }
+
+        // Reset
+        setStartX(null);
+        setStartY(null);
+    };
 
     return (
         <div className="relative w-full">
@@ -86,16 +96,23 @@ const CarouselSlider: React.FC<CarouselProps> = ({ images, interval }) => {
             </div>
 
             <div ref={carouselRef} className="flex transition-transform duration-500 ease-in-out -z-1 cursor-pointer">
-                {images.map((image, index) => (
-                    <img
-                        key={index}
-                        src={image}
-                        alt={`Carousel Image ${index + 1}`}
-                        className="home_image cursor-pointer object-fill h-150"
-                        onClick={() => {
-                            // Handle click event here if needed
-                        }}
-                    />
+                {images.map((image: any, index) => (
+                    // <img
+                    //     key={index}
+                    //     src={image['desktop']}
+                    //     alt={`Carousel Image ${index + 1}`}
+                    //     className="home_image cursor-pointer object-cover h-150"
+                    //     onClick={() => {
+                    //         // Handle click event here if needed
+                    //     }}
+                    // />
+                    <picture key={index} className={`w-full flex-shrink-0 home_image`} style={{ flexBasis: "100%" }}>
+                        <source media="(min-width: 639px)" srcSet={image['desktop']} />
+                        <img src={image['mobile']} alt="Responsive" className="w-full h-100 object-fill cursor-pointer object-cover h-150"
+                            onTouchStart={handleTouchStart}
+                            onTouchEnd={handleTouchEnd}
+                        />
+                    </picture>
                 ))}
             </div>
 

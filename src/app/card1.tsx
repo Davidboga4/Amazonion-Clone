@@ -10,12 +10,13 @@ interface CardProps {
 
 const Card1 = ({ title, images }: CardProps) => {
     return (
-        <div className="relative h-80 w-full shadow-md p-4 bg-white max-w-[20rem]">
-            <label className="font-bold">{title}</label>
+        <div className="h-80 w-full bg-white shadow-md p-4 max-w-[20rem] min-w-[15rem]">
+            <label className="font-bold overflow-hidden text-ellipsis">{title}</label>
             <ImgComp
+                data-testid="img-comp"
                 image={images[0].src}
                 styles="flex m-auto justify-center items-center"
-                imgStyles="h-61 w-60"
+                imgStyles="h-61 w-full"
                 altDesc="image 1"
                 desc={images[0].description}
             />

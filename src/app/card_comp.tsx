@@ -4,7 +4,7 @@ import Card1 from "./card1";
 import Card2 from "./card2";
 import SliderButtons from "./slider_buttons";
 
-const CardComp = () => {
+const CardComp = ({styles}: any) => {
     const shoesImages = [
         {
             src: "https://m.media-amazon.com/images/I/71f3BmjCwtL._AC_UL320_.jpg",
@@ -42,7 +42,7 @@ const CardComp = () => {
     ];
 
     return (
-        <div className="absolute top-68 z-10 flex flex-wrap justify-evenly w-full max-w-[90rem] gap-4">
+        <div className={`z-10 flex overflow-x-auto scrollbar-hide justify-evenly w-full max-w-[90rem] gap-4 ${styles}`}>
             <Card1 title="WOMEN CLOTHING" images={womenClothingImages} />
             <Card1 title="KIDS" images={kidsImages} />
             <Card2 title="BEAUTY" images={beautyImages} />
