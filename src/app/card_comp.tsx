@@ -1,8 +1,6 @@
 "use client";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import Card1 from "./card1";
 import Card2 from "./card2";
-import SliderButtons from "./slider_buttons";
 
 const CardComp = ({styles}: any) => {
     const shoesImages = [
